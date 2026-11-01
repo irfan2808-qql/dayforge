@@ -1,0 +1,14 @@
+import {describe,it,expect} from 'vitest'
+import {localDate,shiftDays,startOfWeek,monthEnd} from '../lib/dates'
+import {dailyTaskRate,streaks,habitRateWeek,habitWeeklyStreak,goalAtDate} from '../lib/progress'
+import type {Workspace} from '../lib/types'
+const day='2026-10-28'
+function empty():Workspace{return {profile:{id:'u',display_name:'Test',timezone:'Asia/Jakarta',theme:'dark'},categories:[],tasks:[],recurrence_rules:[],task_occurrences:[],habits:[],habit_targets:[],habit_entries:[],goals:[],milestones:[],goal_progress_entries:[],daily_reflections:[]}}
+describe('progress integrity',()=>{
+  it('never marks empty days as complete',()=>expect(dailyTaskRate(empty(),day).pct).toBeNull())
+  it('recalculates historical edits',()=>{const w=empty();w.task_occurrences=[{id:'o',user_id:'u',task_id:'t',activity_date:day,status:'pending',completed_at:null}];expect(dailyTaskRate(w,day).pct).toBe(0);w.task_occurrences[0].status='completed';expect(dailyTaskRate(w,day).pct).toBe(100)})
+  it('handles today and yesterday streak grace',()=>{const w=empty();w.habit_entries=[{id:'1',habit_id:'h',user_id:'u',activity_date:shiftDays(day,-2),completed_at:''},{id:'2',habit_id:'h',user_id:'u',activity_date:shiftDays(day,-1),completed_at:''}];expect(streaks(w,day)).toEqual({current:2,longest:2});w.habit_entries.push({id:'3',habit_id:'h',user_id:'u',activity_date:day,completed_at:''});expect(streaks(w,day)).toEqual({current:3,longest:3})})
+  it('calculates weekly target independently of daily streaks',()=>{const w=empty();const monday=startOfWeek(day);w.habits.push({id:'h',user_id:'u',title:'Study',color:'#9981ff',start_date:monday,archived_at:null});w.habit_targets.push({id:'t',user_id:'u',habit_id:'h',weekly_target:3,effective_from:monday});for(let i=0;i<3;i++)w.habit_entries.push({id:String(i),user_id:'u',habit_id:'h',activity_date:shiftDays(monday,i*2),completed_at:''});expect(habitRateWeek(w,w.habits[0],day).pct).toBe(100);expect(habitWeeklyStreak(w,w.habits[0],'2026-10-31')).toBe(1)})
+  it('builds historic goal snapshots from dated entries',()=>{const w=empty();w.goals.push({id:'g',user_id:'u',title:'Apply',description:'',metric_type:'numeric',target_value:20,initial_value:0,target_date:null,status:'in_progress',created_at:'2026-10-01T00:00:00Z'});w.goal_progress_entries=[{id:'e1',user_id:'u',goal_id:'g',delta_value:4,activity_date:'2026-10-15',note:''},{id:'e2',user_id:'u',goal_id:'g',delta_value:6,activity_date:day,note:''}];expect(goalAtDate(w,w.goals[0],'2026-10-16').pct).toBe(20);expect(goalAtDate(w,w.goals[0],day).pct).toBe(50);expect(goalAtDate(w,w.goals[0],'2026-09-20').pct).toBeNull()})
+  it('calculates Jakarta date at UTC boundary and leap dates',()=>{expect(localDate('Asia/Jakarta',new Date('2026-10-28T18:00:00Z'))).toBe('2026-10-29');expect(shiftDays('2028-02-28',1)).toBe('2028-02-29');expect(monthEnd('2028-02-01')).toBe('2028-02-29')})
+})

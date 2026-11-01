@@ -1,0 +1,11 @@
+const {test}=require('node:test');const assert=require('node:assert/strict')
+const d=require('../.logic-build/dates.js'),p=require('../.logic-build/progress.js')
+function workspace(){return {profile:{timezone:'Asia/Jakarta'},categories:[],tasks:[],recurrence_rules:[],task_occurrences:[],habits:[],habit_targets:[],habit_entries:[],goals:[],milestones:[],goal_progress_entries:[],daily_reflections:[]}}
+const today='2026-10-28'
+test('empty day never counts as 100%',()=>{assert.equal(p.dailyTaskRate(workspace(),today).pct,null)})
+test('historic task completion recomputes',()=>{let w=workspace();w.task_occurrences=[{id:'o',activity_date:today,status:'pending'}];assert.equal(p.dailyTaskRate(w,today).pct,0);w.task_occurrences[0].status='completed';assert.equal(p.dailyTaskRate(w,today).pct,100)})
+test('streak handles absent today, existing yesterday',()=>{let w=workspace();w.habit_entries=[{activity_date:d.shiftDays(today,-2)},{activity_date:d.shiftDays(today,-1)}];assert.deepEqual(p.streaks(w,today),{current:2,longest:2})})
+test('weekly habit meets target in nonconsecutive days',()=>{let w=workspace(),m=d.startOfWeek(today);w.habits=[{id:'h',start_date:m,archived_at:null}];w.habit_targets=[{habit_id:'h',weekly_target:3,effective_from:m}];w.habit_entries=[0,2,4].map(i=>({habit_id:'h',activity_date:d.shiftDays(m,i)}));assert.equal(p.habitRateWeek(w,w.habits[0],today).pct,100);assert.equal(p.habitWeeklyStreak(w,w.habits[0],'2026-10-31'),1)})
+test('numeric goal as-of chart uses dated deltas',()=>{let w=workspace();let g={id:'g',created_at:'2026-10-01T00:00:00Z',metric_type:'numeric',initial_value:0,target_value:20};w.goals=[g];w.goal_progress_entries=[{goal_id:'g',activity_date:'2026-10-15',delta_value:4},{goal_id:'g',activity_date:today,delta_value:6}];assert.equal(p.goalAtDate(w,g,'2026-10-16').pct,20);assert.equal(p.goalAtDate(w,g,today).pct,50);assert.equal(p.goalAtDate(w,g,'2026-09-12').pct,null)})
+test('Jakarta midnight offset',()=>{assert.equal(d.localDate('Asia/Jakarta',new Date('2026-10-28T18:00:00Z')),'2026-10-29')})
+test('leap year and ISO week boundary',()=>{assert.equal(d.shiftDays('2028-02-28',1),'2028-02-29');assert.equal(d.monthEnd('2028-02-01'),'2028-02-29');assert.equal(d.startOfWeek('2026-11-01'),'2026-10-26')})
