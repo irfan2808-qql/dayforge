@@ -1,0 +1,16 @@
+{
+  "name": "dayforge-reminder-dispatcher",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "node ../../scripts/check-worker.mjs",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "wrangler": "^4.0.0"
+  }
+}

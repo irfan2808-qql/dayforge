@@ -1,0 +1,15 @@
+{
+  "id": "/",
+  "name": "DayForge Daily Progress Tracker",
+  "short_name": "DayForge",
+  "description": "Daily habits, goals, tasks and reminders",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {"src": "/dayforge-pwa-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/dayforge-pwa-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}

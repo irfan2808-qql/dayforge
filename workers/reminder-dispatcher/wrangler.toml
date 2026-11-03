@@ -1,0 +1,10 @@
+name = "dayforge-reminder-dispatcher"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+
+[triggers]
+crons = ["* * * * *"]
+
+# Non-sensitive configuration; set real value using wrangler vars or dashboard.
+[vars]
+SUPABASE_URL = "https://YOUR_PROJECT.supabase.co"
