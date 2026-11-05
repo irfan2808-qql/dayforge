@@ -80,7 +80,7 @@ export async function sendWebPush(options: WebPushOptions): Promise<Response> {
     vapidAuthorization(options.endpoint, options.subject, options.publicKey, options.privateKey)
   ]);
   return fetch(options.endpoint, {
-    method: 'POST', redirect: 'error', signal: AbortSignal.timeout(15000),
+    method: 'POST', redirect: 'manual', signal: AbortSignal.timeout(15000),
     headers: {'Authorization': authorization, 'TTL': '3600', 'Urgency': 'normal', 'Content-Encoding': 'aes128gcm', 'Content-Type': 'application/octet-stream'},
     body: buffer(data)
   });
